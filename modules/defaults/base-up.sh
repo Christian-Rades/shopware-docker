@@ -314,3 +314,37 @@ function create_varnish() {
     echo "      - ${REALDIR}/default.vcl:/etc/varnish/default.vcl"
   } >>"${DOCKER_COMPOSE_FILE}"
 }
+
+function create_app() {
+  while IFS= read -r NAME; do
+    d="${CODE_DIRECTORY}/${NAME}/.swdc"
+    conf="${d}/app.json"
+    if [ ! -f ${conf} ]; then
+       continue
+       echo $conf
+    fi
+    IMAGE=$(jq '.image' ${conf})
+    hosts=$(jq '.hosts' ${conf} | tr -d '[]""')
+    {
+      echo "  app_${NAME}:"
+      echo "    image: ${IMAGE}"
+      echo "    env_file:"
+      echo "      - ~/.config/swdc/env"
+      echo "    extra_hosts:"
+    } >>"${DOCKER_COMPOSE_FILE}"
+
+    for i in ${hosts//,/ }; do
+      echo "      ${i}: 127.0.0.1" >>"${DOCKER_COMPOSE_FILE}"
+    done
+
+    links=$(jq '.links' ${conf} | tr -d ' \t[]""' | sed '/^$/d')
+    echo "    links:" >>"${DOCKER_COMPOSE_FILE}"
+    while IFS= read -r NAME; do
+      hosts=$(get_hosts "$NAME")
+      for i in ${hosts//,/ }; do
+        echo "      - app_${NAME}:${i}" >>"${DOCKER_COMPOSE_FILE}"
+      done
+    done <<<"${links}"
+
+  done <<<"$(get_app_folders)"
+}

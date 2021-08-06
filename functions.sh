@@ -150,7 +150,17 @@ function get_document_root() {
 function get_serve_folders() {
   for d in "${CODE_DIRECTORY}"/*; do
     if [[ -d "$d" ]]; then
-      if [ -f "$d/public/index.php" ] || [ -f "$d/shopware.php" ]; then
+      if [ ! -f "$d/.swdc/app.json" ] && [ -f "$d/public/index.php" ] || [ -f "$d/shopware.php" ]; then
+        basename "$d"
+      fi
+    fi
+  done
+}
+
+function get_app_folders() {
+  for d in "${CODE_DIRECTORY}"/*; do
+    if [[ -d "$d" ]]; then
+      if [ -f "$d/.swdc/app.json" ]; then
         basename "$d"
       fi
     fi

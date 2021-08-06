@@ -41,6 +41,7 @@ create_nginx
 create_mysql
 create_start_mysql
 create_cli
+create_app
 
 if [[ ${ENABLE_VARNISH} == "true" ]]; then
   create_varnish
